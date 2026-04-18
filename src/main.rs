@@ -549,49 +549,68 @@ fn extract_tar_gz(data: &[u8], dest: &PathBuf) {
 /// otherwise fall back to `<cwd>/ruffle-bin/<name>`.
 fn resolve_ruffle_binary(configured: &str) -> PathBuf {
     let p = PathBuf::from(configured);
-    // Explicit path — use as-is.
+    // Explicit path (absolute or relative with separators) — use as-is.
     if p.is_absolute() || configured.contains('/') || configured.contains('\\') {
         return p;
     }
-    if which_in_path(configured) {
-        return p;
+
+    // 1. Check if it's in the current directory.
+    let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let local = cwd.join(configured);
+    if local.is_file() {
+        return local;
     }
-    // Fall back to ruffle-bin/<name> relative to cwd.
+
     #[cfg(windows)]
-    let fallback_name = if configured.ends_with(".exe") {
+    {
+        let mut name_with_exe = configured.to_string();
+        if !name_with_exe.to_lowercase().ends_with(".exe") {
+            name_with_exe.push_str(".exe");
+            let local_exe = cwd.join(&name_with_exe);
+            if local_exe.is_file() {
+                return local_exe;
+            }
+        }
+    }
+
+    // 2. Check if it's in PATH.
+    if let Some(in_path) = which_in_path(configured) {
+        return in_path;
+    }
+
+    // 3. Fall back to ruffle-bin/<name> relative to cwd.
+    #[cfg(windows)]
+    let fallback_name = if configured.to_lowercase().ends_with(".exe") {
         configured.to_string()
     } else {
         format!("{configured}.exe")
     };
     #[cfg(not(windows))]
     let fallback_name = configured.to_string();
-    let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+
     cwd.join("ruffle-bin").join(fallback_name)
 }
 
 /// Returns true if `name` resolves to an executable file via PATH.
-fn which_in_path(name: &str) -> bool {
-    let path_var = match std::env::var("PATH") {
-        Ok(v) => v,
-        Err(_) => return false,
-    };
+fn which_in_path(name: &str) -> Option<PathBuf> {
+    let path_var = std::env::var("PATH").ok()?;
     let sep = if cfg!(windows) { ';' } else { ':' };
     for dir in path_var.split(sep) {
         let candidate = PathBuf::from(dir).join(name);
         if candidate.is_file() {
-            return true;
+            return Some(candidate);
         }
         #[cfg(windows)]
         {
-            if !name.ends_with(".exe") {
+            if !name.to_lowercase().ends_with(".exe") {
                 let with_exe = PathBuf::from(dir).join(format!("{name}.exe"));
                 if with_exe.is_file() {
-                    return true;
+                    return Some(with_exe);
                 }
             }
         }
     }
-    false
+    None
 }
 
 /// roadclient://https//host/path?query → https://host/path?query

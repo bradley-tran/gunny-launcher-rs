@@ -93,12 +93,12 @@ jobs:
         run: cargo build --release
 
       - id: package_zip
-        name: Create ZIP package (Linux/macOS)
+        name: Create ZIP package (Linux)
         if: matrix.os != 'windows-latest'
         run: |
           TARGET_DIR=target/release
           TAG_OR_SHA=${{ github.ref_name || github.sha }}
-          FOLDER_NAME="${BINARY_NAME}-${TAG_OR_SHA}-${{ matrix.os }}"
+          FOLDER_NAME="${BINARY_NAME}-${TAG_OR_SHA}-linux"
           ZIP_NAME="${FOLDER_NAME}.zip"
           mkdir -p "$FOLDER_NAME"
           cp "$TARGET_DIR/$BINARY_NAME" "$FOLDER_NAME/"

@@ -1,0 +1,16 @@
+# Gunny Launcher configuration
+# Place this file at:
+#   Linux:   ~/.config/gunny-launcher/config.toml
+#   Windows: %APPDATA%/gunny-launcher/config.toml
+#   macOS:   ~/Library/Application Support/gunny-launcher/config.toml
+
+[launcher]
+login_url = "https://id-levelup.gn.zing.vn/login-game?channel=0"
+window_title = "Gunny — Login"
+window_width = 960.0
+window_height = 720.0
+
+[ruffle]
+binary = "ruffle"        # Path or name of the Ruffle desktop binary
+scale = "show-all"       # show-all, exact-fit, no-border, no-scale
+force_scale = true       # Prevent the SWF from changing scale mode

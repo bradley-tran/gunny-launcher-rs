@@ -1,0 +1,16 @@
+[package]
+name = "gunny-launcher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wry = "0.54"
+tao = "0.35"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+ureq = "2"
+url = "2"
+dirs = "6"
+zip = "2"
+flate2 = "1"
+tar = "0.4"
